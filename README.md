@@ -1,16 +1,37 @@
-## Hi there 👋
+from flask import Flask,request,jsonify,render_template
+import joblib
+import pandas as pd
+import datetime
+import os
 
-<!--
-**Auroshree066/Auroshree066** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+app = Flask(__name__)
+model_path = os.getcwd()+r'\models'
+#model_path = os.getcwd()+r'\models\model'
+classifier = joblib.load(model_path+r'\model01.pkl') 
 
-Here are some ideas to get you started:
+def predictfunc(review):    
+      
+     prediction = classifier.predict(review)
+     if prediction[0]==1:
+          sentiment='Positive'
+     else:
+          sentiment='Negative'      
+     return prediction[0],sentiment
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+     
+     if request.method == 'POST':
+        result = request.form
+        content = request.form['review']
+        review = pd.Series(content)
+        prediction,sentiment =predictfunc(review)      
+     return render_template("predict.html",pred=prediction,sent=sentiment)
+
+if __name__ == '__main__':
+     app.run(debug = True,port=8080)
+    # app.run(host='0.0.0.0')
